@@ -1,5 +1,5 @@
 # DeepSeek-v2-MoE-MLA-DLB_and_CB-Loss-Implementation
-Self-implementation of** Device-Level Balance Loss** and** Communication Balance Loss** of DeepSeek v2 Tech Report（Not Given in Official Code）
+Self-implementation of **Device-Level Balance Loss** and **Communication Balance Loss** of DeepSeek v2 Tech Report（Not Given in Official Code）
 
 ## Project Introduction
 The [Official Code](https://huggingface.co/deepseek-ai/DeepSeek-V2/blob/main/modeling_deepseek.py) only gives the implementation of Aux Loss and LM Loss:
