@@ -1,47 +1,3 @@
-import math
-import warnings
-from typing import List, Optional, Tuple, Union
-
-import torch
-import torch.nn.functional as F
-import torch.utils.checkpoint
-from torch import nn
-from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-
-from transformers.activations import ACT2FN
-from transformers.cache_utils import Cache, DynamicCache
-from transformers.modeling_attn_mask_utils import (
-    AttentionMaskConverter,
-    _prepare_4d_attention_mask,
-    _prepare_4d_causal_attention_mask,
-)
-from transformers.modeling_outputs import (
-    BaseModelOutputWithPast,
-    CausalLMOutputWithPast,
-    SequenceClassifierOutputWithPast,
-)
-from transformers.modeling_utils import PreTrainedModel
-from transformers.pytorch_utils import (
-    ALL_LAYERNORM_LAYERS,
-    is_torch_greater_or_equal_than_1_13,
-)
-from transformers.utils import (
-    add_start_docstrings,
-    add_start_docstrings_to_model_forward,
-    is_flash_attn_2_available,
-    is_flash_attn_greater_or_equal_2_10,
-    logging,
-    replace_return_docstrings,
-)
-from transformers.utils.import_utils import is_torch_fx_available
-from .configuration_deepseek import DeepseekV2Config
-import torch.distributed as dist
-import numpy as np
-
-if is_flash_attn_2_available():
-    from flash_attn import flash_attn_func, flash_attn_varlen_func
-    from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input  # noqa
-
 class MoEGate(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -193,25 +149,3 @@ class MoEGate(nn.Module):
             total_aux_loss = total_aux_loss + comm_aux_loss if total_aux_loss is not None else comm_aux_loss
             
         return topk_idx, topk_weight, total_aux_loss
-        
-
-
-class AddAuxiliaryLoss(torch.autograd.Function):
-    """
-    The trick function of adding auxiliary (aux) loss,
-    which includes the gradient of the aux loss during backpropagation.
-    """
-
-    @staticmethod
-    def forward(ctx, x, loss):
-        assert loss.numel() == 1
-        ctx.dtype = loss.dtype
-        ctx.required_aux_loss = loss.requires_grad
-        return x
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        grad_loss = None
-        if ctx.required_aux_loss:
-            grad_loss = torch.ones(1, dtype=ctx.dtype, device=grad_output.device)
-        return grad_output, grad_loss
