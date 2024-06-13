@@ -126,7 +126,7 @@ class MoEGate(nn.Module):
         if self.training and self.alpha3 > 0.0:
             comm_f_i_prime = []
             comm_P_i_prime = []
-            M = self.n_devices  # Total equipment
+            M = self.n_devices  # Total devices
             for group in device_groups:
                 f_i_double_prime = (len(device_groups) / (M * seq_len)) * torch.tensor(
                     [sum(topk_idx.view(bsz, seq_len, -1)[:, :, i] == idx) for i in range(self.top_k) for idx in group], 
